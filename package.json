@@ -1,0 +1,28 @@
+{
+  "name": "ffprobe-baron",
+  "version": "1.0.0",
+  "description": "Downloads the ffprobe binary for use in npx scripts",
+  "main": "index.js",
+  "bin": {
+    "ffprobe": "./ffprobe"
+  },
+  "scripts": {
+    "install": "node index.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uvmain/ffprobe-baron.git"
+  },
+  "keywords": [
+    "ffprobe"
+  ],
+  "author": "Ian Baron",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/uvmain/ffprobe-baron/issues"
+  },
+  "homepage": "https://github.com/uvmain/ffprobe-baron#readme",
+  "dependencies": {
+    "decompress": "^4.2.1"
+  }
+}
