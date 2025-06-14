@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { createWriteStream } from 'node:fs'
-import https from 'node:https'
 import os from 'node:os'
+import { pipeline } from 'node:stream/promises'
 import decompress from 'decompress'
 
 const platform = os.platform()
@@ -55,9 +55,9 @@ async function downloadFfBinariesFile() {
     if (!response.ok) {
       throw new Error(`Error fetching download URL: ${response.status}`)
     }
-    const info = await response.json()
-    if (info.bin && info.bin[target] && info.bin[target].ffprobe) {
-      downloadUrl = info.bin[target].ffprobe
+    const json = await response.json()
+    if (json.bin && json.bin[target] && json.bin[target].ffprobe) {
+      downloadUrl = json.bin[target].ffprobe
     }
     else {
       throw new Error('ffprobe not found at ffbinaries.com')
@@ -70,47 +70,30 @@ async function downloadFfBinariesFile() {
 }
 
 async function downloadZip(url) {
-  https.get(url, (res) => {
-    if (res.statusCode === 302 && res.headers.location) {
-      url = res.headers.location
+  try {
+    const response = await fetch(url, { redirect: 'follow' })
+
+    if (!response.ok) {
+      throw new Error(`Failed to download file: ${response.status} ${response.statusText}`)
     }
 
-    if (res.statusCode !== 200) {
-      return
-    }
-
-    const disposition = res.headers['content-disposition']
-    let fileName = 'ffprobe.zip'
-
-    if (disposition) {
-      // eslint-disable-next-line regexp/no-super-linear-backtracking
-      const match = disposition.match(/filename="?(.+?)"?(\s*;|$)/i)
-      if (match && match[1]) {
-        fileName = match[1]
-      }
-    }
-
-    fileString = fileName
+    const fileName = 'ffprobe.zip'
     const writeStream = createWriteStream(fileName)
 
-    res.pipe(writeStream)
+    await pipeline(response.body, writeStream)
 
-    writeStream.on('finish', async () => {
-      writeStream.close()
-      await unzip()
+    fileString = fileName
+    await unzip()
 
-      if (platform === 'win32') {
-        fs.copyFileSync('./ffprobe.exe', './ffprobe')
-      }
-    })
-
-    writeStream.on('error', () => {
-      fs.unlinkSync(fileName)
-      fs.rmSync('__MACOSX', { recursive: true, force: true })
-    })
-  }).on('error', (err) => {
-    console.error(err)
-  })
+    if (platform === 'win32') {
+      fs.copyFileSync('./ffprobe.exe', './ffprobe')
+    }
+  }
+  catch (err) {
+    console.error('Error downloading zip:', err)
+    fs.unlinkSync('ffprobe.zip')
+    fs.rmSync('__MACOSX', { recursive: true, force: true })
+  }
 }
 
 async function unzip() {
@@ -131,6 +114,6 @@ async function unzip() {
     downloadOsxExpertsBinariesFile()
   }
   else {
-    await downloadFfBinariesFile()
+    downloadFfBinariesFile()
   }
 })()
