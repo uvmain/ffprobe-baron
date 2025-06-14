@@ -12,43 +12,65 @@ const options = { headers: { 'User-Agent': 'Node.js' } }
 let fileString = ''
 let target = ''
 
-function getLatestReleaseUrl() {
+function getArch() {
   if (platform === 'win32') {
     target = arch === 'x64' ? 'windows-64' : 'windows-32'
   }
   else if (platform === 'darwin') {
-    target = arch === 'arm64' ? 'osx-arm64' : 'osx-64'
+    target = arch === 'arm64' ? 'arm' : 'intel'
   }
   else if (platform === 'linux') {
     target = arch === 'x64' ? 'linux-64' : 'linux-32'
   }
   else {
     console.error('Unsupported platform/architecture.')
-    return
-  }
-  if (target === 'osx-arm64') {
-    console.warn('darwin arm64')
-  }
-  else {
-    const base = 'https://ffbinaries.com/api/v1/version/latest'
-    return new Promise((resolve, reject) => {
-      https.get(base, options, (res) => {
-        let data = ''
-        res.on('data', chunk => (data += chunk))
-        res.on('end', () => {
-          const info = JSON.parse(data)
-          const url = info.bin[target].ffprobe
-          resolve(url)
-        })
-      }).on('error', reject)
-    })
   }
 }
 
-function downloadFfBinariesFile(downloadUrl) {
-  https.get(downloadUrl, (res) => {
+async function downloadOsxExpertsBinariesFile() {
+  try {
+    let url = 'https://www.osxexperts.net'
+    let response = await fetch(url)
+    const html = await response.text()
+    console.log(`target is ${target}`)
+    const regex = new RegExp(`href="([^"]*ffprobe[^"]*${target}[^"]*)"`)
+    const match = html.match(regex)
+
+    if (match && match[1]) {
+      url = match[1]
+      console.log('Found FFProbe Apple Silicon build at:', url)
+
+      await downloadZip(url)
+    }
+    else {
+      console.error('Could not find Apple Silicon build for FFProbe.')
+    }
+  }
+  catch (error) {
+    console.error('Error fetching FFProbe build:', error)
+  }
+}
+
+async function downloadFfBinariesFile() {
+  const url = 'https://ffbinaries.com/api/v1/version/latest'
+  const downloadUrl = await new Promise((resolve, reject) => {
+    https.get(base, options, (res) => {
+      let data = ''
+      res.on('data', chunk => (data += chunk))
+      res.on('end', () => {
+        const info = JSON.parse(data)
+        const url = info.bin[target].ffprobe
+        resolve(url)
+      })
+    }).on('error', reject)
+  })
+  await downloadZip(downloadUrl)
+}
+
+async function downloadZip(url) {
+  https.get(url, (res) => {
     if (res.statusCode === 302 && res.headers.location) {
-      return downloadFile(res.headers.location)
+      url = res.headers.location
     }
 
     if (res.statusCode !== 200) {
@@ -81,6 +103,7 @@ function downloadFfBinariesFile(downloadUrl) {
 
     writeStream.on('error', () => {
       fs.unlinkSync(fileName)
+      fs.rmSync('__MACOSX', { recursive: true, force: true })
     })
   }).on('error', (err) => {
     console.error(err)
@@ -100,11 +123,11 @@ async function unzip() {
 }
 
 (async () => {
-  const downloadUrl = await getLatestReleaseUrl()
-  if (downloadUrl !== undefined)
-    if (target === 'osx-arm64') {
-      console.warn('download darwin arm64')
-    } else {
-      await downloadFfBinariesFile(downloadUrl)
-    }
+  await getArch()
+  if (platform === 'darwin') {
+    downloadOsxExpertsBinariesFile()
+  }
+  else {
+    await downloadFfBinariesFile()
+  }
 })()
