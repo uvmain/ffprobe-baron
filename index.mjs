@@ -51,13 +51,13 @@ async function downloadFfBinariesFile() {
   const url = 'https://ffbinaries.com/api/v1/version/latest'
   let downloadUrl = ''
   try {
-    const response = await fetch(url);
+    const response = await fetch(url)
     if (!response.ok) {
       throw new Error(`Error fetching download URL: ${response.status}`)
     }
-    const info = await response.json();
+    const info = await response.json()
     if (info.bin && info.bin[target] && info.bin[target].ffprobe) {
-      downloadUrl = info.bin[target].ffprobe;
+      downloadUrl = info.bin[target].ffprobe
     }
     else {
       throw new Error('ffprobe not found at ffbinaries.com')
@@ -83,6 +83,7 @@ async function downloadZip(url) {
     let fileName = 'ffprobe.zip'
 
     if (disposition) {
+      // eslint-disable-next-line regexp/no-super-linear-backtracking
       const match = disposition.match(/filename="?(.+?)"?(\s*;|$)/i)
       if (match && match[1]) {
         fileName = match[1]
