@@ -7,8 +7,6 @@ import decompress from 'decompress'
 const platform = os.platform()
 const arch = os.arch()
 
-const options = { headers: { 'User-Agent': 'Node.js' } }
-
 let fileString = ''
 let target = ''
 
@@ -30,15 +28,13 @@ function getArch() {
 async function downloadOsxExpertsBinariesFile() {
   try {
     let url = 'https://www.osxexperts.net'
-    let response = await fetch(url)
+    const response = await fetch(url)
     const html = await response.text()
-    console.log(`target is ${target}`)
     const regex = new RegExp(`href="([^"]*ffprobe[^"]*${target}[^"]*)"`)
     const match = html.match(regex)
 
     if (match && match[1]) {
       url = match[1]
-      console.log('Found FFProbe Apple Silicon build at:', url)
 
       await downloadZip(url)
     }
@@ -53,17 +49,23 @@ async function downloadOsxExpertsBinariesFile() {
 
 async function downloadFfBinariesFile() {
   const url = 'https://ffbinaries.com/api/v1/version/latest'
-  const downloadUrl = await new Promise((resolve, reject) => {
-    https.get(base, options, (res) => {
-      let data = ''
-      res.on('data', chunk => (data += chunk))
-      res.on('end', () => {
-        const info = JSON.parse(data)
-        const url = info.bin[target].ffprobe
-        resolve(url)
-      })
-    }).on('error', reject)
-  })
+  let downloadUrl = ''
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Error fetching download URL: ${response.status}`)
+    }
+    const info = await response.json();
+    if (info.bin && info.bin[target] && info.bin[target].ffprobe) {
+      downloadUrl = info.bin[target].ffprobe;
+    }
+    else {
+      throw new Error('ffprobe not found at ffbinaries.com')
+    }
+  }
+  catch (error) {
+    console.error('Error fetching download URL:', error.message)
+  }
   await downloadZip(downloadUrl)
 }
 
