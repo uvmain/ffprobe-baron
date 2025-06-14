@@ -6,7 +6,7 @@ import decompress from 'decompress'
 
 const platform = os.platform()
 const arch = os.arch()
-
+const macosxDir = './__MACOSX'
 let fileString = ''
 let target = ''
 
@@ -92,7 +92,7 @@ async function downloadZip(url) {
   catch (err) {
     console.error('Error downloading zip:', err)
     fs.unlinkSync('ffprobe.zip')
-    fs.rmSync('__MACOSX', { recursive: true, force: true })
+    fs.rmSync(macosxDir, { recursive: true, force: true })
   }
 }
 
@@ -102,7 +102,6 @@ async function unzip() {
       filter: file => file.path.includes('ffprobe'),
     })
     fs.unlinkSync(fileString)
-    const macosxDir = './__MACOSX'
     if (fs.existsSync(macosxDir)) {
       fs.rmSync(macosxDir, { recursive: true, force: true })
     }

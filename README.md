@@ -7,6 +7,7 @@ Downloads a platform-specific static ffprobe binary for use in npm/npx scripts
 
 ````
 "scripts": {
+    "dev": "cross-env FFPROBE_PATH=./node_modules/.bin/ffprobe ..."
     "ffprobe:version": "ffprobe -version",
     "ffprobe:tags": "ffprobe -show_format -print_format json music.mp3"
 }
