@@ -7,6 +7,7 @@ import decompress from 'decompress'
 const platform = os.platform()
 const arch = os.arch()
 const macosxDir = './__MACOSX'
+const fileName = 'ffprobe.zip'
 let fileString = ''
 let target = ''
 
@@ -69,6 +70,15 @@ async function downloadFfBinariesFile() {
   await downloadZip(downloadUrl)
 }
 
+function cleanup() {
+  if (fs.existsSync(fileName)) {
+    fs.unlinkSync(fileName)
+  }
+  if (fs.existsSync(macosxDir)) {
+    fs.rmSync(macosxDir, { recursive: true, force: true })
+  }
+}
+
 async function downloadZip(url) {
   try {
     const response = await fetch(url, { redirect: 'follow' })
@@ -77,7 +87,6 @@ async function downloadZip(url) {
       throw new Error(`Failed to download file: ${response.status} ${response.statusText}`)
     }
 
-    const fileName = 'ffprobe.zip'
     const writeStream = createWriteStream(fileName)
 
     await pipeline(response.body, writeStream)
@@ -91,8 +100,7 @@ async function downloadZip(url) {
   }
   catch (err) {
     console.error('Error downloading zip:', err)
-    fs.unlinkSync('ffprobe.zip')
-    fs.rmSync(macosxDir, { recursive: true, force: true })
+    cleanup()
   }
 }
 
@@ -101,10 +109,7 @@ async function unzip() {
     await decompress(fileString, '.', {
       filter: file => file.path.includes('ffprobe'),
     })
-    fs.unlinkSync(fileString)
-    if (fs.existsSync(macosxDir)) {
-      fs.rmSync(macosxDir, { recursive: true, force: true })
-    }
+    cleanup()
   }
   catch (err) {
     console.error(err)
