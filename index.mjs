@@ -102,6 +102,10 @@ async function unzip() {
       filter: file => file.path.includes('ffprobe'),
     })
     fs.unlinkSync(fileString)
+    const macosxDir = './__MACOSX'
+    if (fs.existsSync(macosxDir)) {
+      fs.rmSync(macosxDir, { recursive: true, force: true })
+    }
   }
   catch (err) {
     console.error(err)
