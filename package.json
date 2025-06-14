@@ -1,28 +1,34 @@
 {
   "name": "ffprobe-baron",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Downloads the ffprobe binary for use in npx scripts",
+  "author": "Ian Baron",
+  "license": "ISC",
+  "homepage": "https://github.com/uvmain/ffprobe-baron#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uvmain/ffprobe-baron.git"
+  },
+  "bugs": {
+    "url": "https://github.com/uvmain/ffprobe-baron/issues"
+  },
+  "keywords": [
+    "ffprobe"
+  ],
   "main": "index.js",
   "bin": {
     "ffprobe": "./ffprobe"
   },
   "scripts": {
-    "install": "node index.mjs"
+    "install": "node index.mjs",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/uvmain/ffprobe-baron.git"
-  },
-  "keywords": [
-    "ffprobe"
-  ],
-  "author": "Ian Baron",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/uvmain/ffprobe-baron/issues"
-  },
-  "homepage": "https://github.com/uvmain/ffprobe-baron#readme",
   "dependencies": {
     "decompress": "^4.2.1"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.14.1",
+    "eslint": "^9.29.0"
   }
 }
