@@ -1,6 +1,6 @@
 {
   "name": "ffprobe-baron",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Downloads the ffprobe binary for use in npx scripts",
   "author": "Ian Baron",
   "license": "ISC",
